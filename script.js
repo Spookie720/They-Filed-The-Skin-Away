@@ -42,6 +42,12 @@ const scenes = {
                 gameState.inventory.push("datapad");
                 gameState.flags.helpedCreatureInTank = true;
                 console.log("You take the datapad from the tank, it feels warm to the touch  almost like it is alive. You can see that it has a strange interface but for somereason you can understand it. the datapad seems to contain a security override for the tank and a way to release the creature inside.");
+                const name = prompt("the creature watches you with its single eye what do you want to name it?");
+                gameState.creature.name = name || "Unnamed Creature";
+                gameState.trust = {
+                    [name]: 3 // trust scale 0 = hostile, 10 = bonded
+                };
+                console.log("You take the datapad. You name the creature: ${gameState.creature.name}. the datapad puls with energy you can feel it through your fingers as you hold it.It seems to respond to the name with a soft click and a slight movement of its mechanical parts.");
             }
         },
         { text: "return to the Observation Cell", nextScene:"ObservationCell" },
@@ -51,6 +57,22 @@ const scenes = {
                 console.log("the creature watches eerily still you exit the room as it floats in the tank of bioluminecnt liquid. You can see its mechanical parts glinting in the dim light, and it seems to be studying you with its single eye.");
             } else {
                 console.log("the creature in the tank looks at you with a mix of fear and curiosity. It seems to be trying to communicate, but you can't understand it . As It clicks and chatters in an unknown language as the tank slowly drains the liquid spilling onto the floor.");
+            }
+        }
+    }
+    CreatureCommunication: {
+        description: function() {
+            if (gameState.falags.helpedCreatureInTank) {
+                return " ${gameState.creature.name} looks at you with a mix of hesitant and curiosity. It seems to be trying to communicate, but you can't understand it. As it clicks and chatters in an unknown language, the tank now completely drains the liquid spilled onto the floor it thick and viscous. ${gameState.creature.name} blinks its one big eye at you, slowly a sign of trust. its mechanical parts whirring softly ."
+            }
+        },
+        choices:[
+            { text:"return to the Tank Room", nextScene:"TankRoom" },
+        ]
+        onEnter: function() {
+            if (gameState.falags.helpedCreatureInTank) {
+                gameState.trust[gameState.creature.name] += 1; // Increase trust level
+                console.log("trust level with ${gameState.creature.name} increased to ${gameState.trust[gameState.creature.name]}. The creature seems to be more comfortable around you, its mechanical parts whirring softly as it moves closer.");
             }
         }
     }
