@@ -39,7 +39,7 @@ const scenes = {
                 gameState.flags.helpedCreatureInTank = true;
                 console.log("You take the datapad from the tank, it feels warm to the touch  almost like it is alive. You can see that it has a strange interface but for somereason you can understand it. the datapad seems to contain a security override for the tank and a way to release the creature inside.");
             }
-        }
+        },
         { text: "return to the Observation Cell", nextScene:"ObservationCell" },
         ],
         onEnter: function() {
