@@ -1,58 +1,140 @@
+import { action, gameState, gotoScene } from "../script.js";
+import { delayText } from "../utilities.js";
+
 const scenes = {
     ObservationCell: {
-        description: "You wake up in am a dimly lit metal cell and your lying falt on a table made of both metal and a glowing translucent membran that hums. There also a door made out of the same material as the table but you can fiantly see something stirring behind it....",
-        choices:[
-            { text: "Examine the table", action: "examineTable" },
-            { text: "Examine the wired door", nextScene:"TankRoom" },
-            { text: "Call out ", nextScene:"ObservationCell" },
+        description: "You wake in a chamber that hums faintly, as though the walls themselves breathe. Veins of dim blue light pulse beneath the surface, fading in and out like a heartbeat. The floor is slick with a thin film of something viscous, and the air tastes faintly of metal and rot. A single pane of glass curves outward, watching you as much as you watch it. You are lying flat on a table made of both metal and a glowing translucent membrane that hums. A door made of the same material shows something stirring behind it....",
+        choices: [
+            {
+                text: "Examine the table",
+                action: async () => {
+                    if (!gameState.logsCollected.includes("SubjectType7")) {
+                        await delayText(`You find a half-corrupted datapad. It reads: 'Observation Log Redacted
+Subject exhibits autonomic function despite lack of visible sustenance. Reflexive responses absent. When exposed to auditory triggers, subject remains still — though ocular activity suggests heightened awareness. Recommend prolonged confinement. Do not engage directly.`);
+                        gameState.logsCollected.push("SubjectType7");
+                    } else {
+                        await delayText("The same datapad flickers faintly on the table.");
+                    }
+                }
+            },
+
+            // ---Flavor text choices ---
+            {
+                text: "Examine the glass pane",
+                action: async () => {
+                    const glassText = [
+                        "Your rellection lingers a beat tooo long when you move.", "The glass bulges outwaredraching for you as though something on the other saide were pressing back."
+                    ];
+                    const randomLine = glassText[Math.floor(Math.random()) * glassText.length];
+                    await delayText(randomLine);
+                }
+            },
+            {
+                text: "Examine the drain grate",
+                action: async () => {
+                    const drainText = [
+                        "Black liquid swirls faintly.... but dosen't flow anywhere. just spits black goo.",
+                        "Something down there gurgles, wet, low, and hungry."
+                    ];
+                    const randomLine = drainText[Math.floor(Math.random()) * drainText.length];
+                    await delayText(randomLine);
+                }
+            },
+            {
+                text: "Listen to the ceiling speaker",
+                action: async () => {
+                    const speakerText = [
+                        "A faint static hiss, also most like wispering",
+                        "the noise pauses whenever you hold your breath."
+                    ];
+                    const randomLine = speakerText[Math.floor(Math.floor()) * speakerText.length];
+                    await delayText(randomLine);
+                }
+            },
+
+            { text: "Examine the wired door", nextScene: "TankRoom" },
+            { text: "Call out", nextScene: "ObservationCell" }
         ],
-        onEnter: function() {
-            console.log("You are in the Observation Cell. The atmosphere is tense and you can feel the hum of the table beneath you.");
-            // Add any additional setup for this scene here
+        onEnter: async function () {
+            await delayText("You are in the Observation Cell. The atmosphere is tense and you can feel the hum of the table beneath you.");
+
+            if (gameState.flags.memoryClueFound) {
+                await delayText("A flash of memory comes to you from the Ash Forest... something here seems different now.");
+                // maybe unlock extra choice here
+            }
         }
     },
+    // --- Escape logic based on creature choice ---
+    text: "look for a way out",
+    action: async () => {
+        if (gameState.flags.helpedCreatureInTank) {
+            await delayText("The tank's collapse must have damaged nearby systems.you notice a vent grate hanging loosenear the floor.");
+            await delayText("it leads inot darkness but the hum of machinery below sound almost.... welcoming.");
+            gotoScene("longHallway");//easy escape path
+        } else {
+            await delayText("the door's contorl panel is dead and the wall hum louder when you touch them.");
+            await delayText("beneath the drain grate, faimt wores pulse and diping with neon light maybe you short the door manually....");
+            gotoScene("ObservationCellPuzzle");//harder puzzle scene(still need to make )
+        }
+    },
+
+
     TankRoom: {
-        description:"the room is dimly lit, with a large tank bubbling in the center. The tank is filled with a strange, glowing liquid and you can see a creature moving inside it. The Creature is half skinned and has mechanical parts to be painfuly grafted the organic part look like a mix of a orangutan and a cyclops. The tank are covered in strange symbols and there is a faint humming sound.",
-        choices:[
-            { text: "Examine the tank", action: "examineTank" },
-            { text: "Try to communicate with the creature", nextScene:"CreatureCommunication" },
-            { text: "Look for a way out", nextScene:"ObservationCell" },
-            { text: "take the datapad", action: function(){
-                gameState.inventory.push("datapad");
-                gameState.flags.helpedCreatureInTank = true;
-                console.log("You take the datapad from the tank, it feels warm to the touch  almost like it is alive. You can see that it has a strange interface but for somereason you can understand it. the datapad seems to contain a security override for the tank and a way to release the creature inside.");
-                const name = prompt("the creature watches you with its single eye what do you want to name it?");
-                gameState.creature.name = name || "Unnamed Creature";
-                gameState.trust = {
-                    [name]: 3 // trust scale 0 = hostile, 10 = bonded
-                };
-                console.log("You take the datapad. You name the creature: ${gameState.creature.name}. the datapad puls with energy you can feel it through your fingers as you hold it.It seems to respond to the name with a soft click and a slight movement of its mechanical parts.");
-            }
-        },
-        { text: "return to the Observation Cell", nextScene:"ObservationCell" },
+        description: "The room breathes with a low, rhythmic hum. A faint chemical sting clings to the air, sharp enough to make your eyes water. In the center, a massive tank bubbles softly, each ripple catching the dim light and bending it like warped glass. Inside drifts a creature that seems assembled rather than born—skin peeled back in uneven patches to reveal the machinery beneath. A single clouded eye rolls lazily in the fluid, occasionally twitching as if in restless sleep. Its proportions hint at something once simian—broad-shouldered, long limbed like an orangutan but stretched wrong, as though someone rebuilt it from memory and got the anatomy slightly off. Strange sigils are carved into the glass, glowing faintly when you draw near. The hum shifts pitch, almost acknowledging your presence.",
+        choices: [
+            { text: "Examine the tank", action: async () => await delayText("The tank bubbles ominously. The creature shifts inside...") },
+            { text: "Try to communicate with the creature", nextScene: "CreatureCommunication" },
+            {
+                text: "Look for a way out", action: async () => {
+                    if (gameState.flags.helpedCreatureInTank) {
+                        await delayText("The creature presses a lever with its mechanical arm, opening the door for you...");
+                        gotoScene("LongHallway");
+                    } else {
+                        await delayText("The door is locked. You notice a faint control panel that might be overridden...");
+                        gotoScene("ObservationCellPuzzle");
+                    }
+                }
+            },
+            {
+                text: "Take the datapad", action: async () => {
+                    gameState.inventory.push("datapad");
+                    gameState.flags.helpedCreatureInTank = true;
+                    await delayText("You take the datapad from the tank. It feels warm to the touch, almost alive. The warmth seems to pulse faintly, syncing with your heartbeat. Somehow, you can understand its strange interface—the symbols shift and reorder themselves until they make sense. It contains a security override for the tank, a simple command to release the creature inside. The air changes when you notice it—the hum in the walls deepens, and the fluid inside the tank stirs. You can't tell if the creature senses your choice… or if something else does.");
+
+                    const name = prompt("The creature watches you with its single eye. What do you want to name it?");
+                    gameState.creature.name = name || "Unnamed Creature";
+                    gameState.creature.trust = 3;
+
+                    await delayText(`You named the creature: ${gameState.creature.name}. The datapad pulses with energy as you hold it. The creature clicks softly, responding to its name.`);
+                }
+            },
+            { text: "Return to the Observation Cell", nextScene: "ObservationCell" }
         ],
-        onEnter: function() {
+        onEnter: async function () {
             if (!gameState.flags.helpedCreatureInTank) {
-                console.log("the creature watches eerily still you exit the room as it floats in the tank of bioluminecnt liquid. You can see its mechanical parts glinting in the dim light, and it seems to be studying you with its single eye.");
+                await delayText("The creature watches eerily still as you exit the room, floating in the bioluminescent liquid. Its mechanical parts glint in the dim light.");
             } else {
-                console.log("the creature in the tank looks at you with a mix of fear and curiosity. It seems to be trying to communicate, but you can't understand it . As It clicks and chatters in an unknown language as the tank slowly drains the liquid spilling onto the floor.");
+                await delayText("The creature looks at you with a mix of fear and curiosity. It clicks and chatters in an unknown language as the tank slowly drains, liquid spilling onto the floor.");
             }
         }
     },
+
     CreatureCommunication: {
-        description: function() {
-            if (gameState.falags.helpedCreatureInTank) {
-                return " ${gameState.creature.name} looks at you with a mix of hesitant and curiosity. It seems to be trying to communicate, but you can't understand it. As it clicks and chatters in an unknown language, the tank now completely drains the liquid spilled onto the floor it thick and viscous. ${gameState.creature.name} blinks its one big eye at you, slowly a sign of trust. its mechanical parts whirring softly ."
+        description: async function () {
+            if (gameState.flags.helpedCreatureInTank) {
+                return `${gameState.creature.name} looks at you with hesitant curiosity. It clicks and chatters in an unknown language as the tank drains. Its mechanical parts whir softly, and it blinks its one big eye at you — slowly, a sign of trust.`;
             }
         },
-        choices:[
-            { text:"return to the Tank Room", nextScene:"TankRoom" },
+        choices: [
+            { text: "Return to the Tank Room", nextScene: "TankRoom" },
         ],
-        onEnter: function() {
-            if (gameState.falags.helpedCreatureInTank) {
-                gameState.trust[gameState.creature.name] += 1; // Increase trust level
-                console.log("trust level with ${gameState.creature.name} increased to ${gameState.trust[gameState.creature.name]}. The creature seems to be more comfortable around you, its mechanical parts whirring softly as it moves closer.");
+        onEnter: async function () {
+            if (gameState.flags.helpedCreatureInTank) {
+                gameState.creature.trust += 1;
+                await delayText(`Trust level with ${gameState.creature.name} increased to ${gameState.creature.trust}. The creature seems more comfortable around you, its mechanical parts whirring softly as it moves closer.`);
             }
         }
     }
 };
+
+export default scenes;
